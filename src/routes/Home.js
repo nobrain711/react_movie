@@ -1,36 +1,39 @@
 import React from "react";
 import axios from "axios";
 import Movie from "../components/Movie";
-import './Home.css';
+import "./Home.css";
 
-class Home extends React.Component{
+class Home extends React.Component {
   state = {
     isLoading: true,
     movies: [],
   };
 
-  getMovies=async()=>{
+  getMovies = async () => {
     const {
-      data:{
-        data:{movies},
+      data: {
+        data: { movies },
       },
-    }=await axios.get('https://yts-proxy.now.sh/list_movies.json?sort_by=ratin'); //eslint-disable-line no-unused-vars
-    this.setState({movies, isLoading: false}); 
-  }
-  
-  componentDidMount(){
+    } = await axios.get(
+      "https://yts-proxy.now.sh/list_movies.json?sort_by=ratin"
+    ); //eslint-disable-line no-unused-vars
+    this.setState({ movies, isLoading: false });
+  };
+
+  componentDidMount() {
     this.getMovies();
   }
-  render(){
-    const{isLoading, movies} = this.state;
-    return(
+  render() {
+    const { isLoading, movies } = this.state;
+    return (
       <section className="container">
-        {isLoading ?(
-        <div className="loader">
-          <span className="loader__text">Loading...</span>
-        </div>) : (
+        {isLoading ? (
+          <div className="loader">
+            <span className="loader__text">Loading...</span>
+          </div>
+        ) : (
           <div className="movies">
-            {movies.map(movie =>(
+            {movies.map((movie) => (
               <Movie
                 key={movie.id}
                 id={movie.id}
@@ -42,10 +45,9 @@ class Home extends React.Component{
               />
             ))}
           </div>
-        )
-      }  
+        )}
       </section>
-    )
+    );
   }
 }
 
