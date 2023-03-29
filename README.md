@@ -3,7 +3,8 @@
 2학년 1학기 프론트프레임워크 수업 중 만든 영화 사이트  
 [페이지](https://nobrain711.github.io/react_movie/#/)
 
-> 출처  
+## 출처
+
 > Do it! 클론 코딩 영화 평점 웹서비스 : 노마드 코더 니꼴라스와 만드는 진짜 리액트 앱  
 > ![책](https://contents.kyobobook.co.kr/sih/fit-in/458x0/pdt/9791163031635.jpg)  
 > 링크
@@ -53,6 +54,6 @@
 
 ## 라우터 구성
 
-> MainPage
-> ┣ About
+> MainPage  
+> ┣ About  
 > ┗ movie-detail
