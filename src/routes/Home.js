@@ -14,7 +14,9 @@ class Home extends React.Component {
       data: {
         data: { movies },
       },
-    } = await axios.get("https://yts.mx/api/v2/list_movies.json?sort_by=ratin"); //eslint-disable-line no-unused-vars
+    } = await axios.get(
+      "https://yts.mx/api/v2/list_movies.json?sort_by=rating"
+    ); //eslint-disable-line no-unused-vars
     this.setState({ movies, isLoading: false });
   };
 
