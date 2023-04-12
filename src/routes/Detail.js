@@ -1,34 +1,56 @@
 import React from "react";
 import styled from "styled-components";
 
-const Div = styled.div`
+const BG = styled.div`
   width: 100%;
   height: 100vh;
   margin: auto;
   position: relative;
-  .movie {
+  .poster {
     position: absolute;
-    width: 60%;
-    height: auto%;
+    margin-top: 2.5%;
+    margin-left: 7%;
+    width: 30%;
+    height: 90%;
+  }
+  .moive__detail {
+    position: absolute;
+    margin-left: 40%;
+    margin-top: 2.5%;
+    width: 55%;
+    height: auto;
     border-radius: 10px;
-    top: 46%;
-    left: 50%;
-    transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.6);
-    h1 {
-      padding-bottom: 20px;
-      font-size: 40px;
-      font-weight: bold;
+    .movie__title {
+      text-align: center;
       color: white;
-    }
-    h2 {
       font-size: 30px;
-      padding-bottom: 10px;
-      color: lightpink;
+      font-weight: bold;
+      font-style: italic;
+      margin-top: 10px;
     }
-    h3 {
+    .movie__year,
+    .movie__geners {
+      color: #bebebe;
+      text-align: right;
+      margin-right: 7.5%;
+      font-size: 25px;
+    }
+    .movie__geners {
+      margin-top: 0px;
+      list-style: none;
+    }
+    .movie__geners li {
+      float: right;
+      font-size: 25px;
+      color: #bebebe;
+      margin-left: 15px;
+      margin-top: 0px;
+    }
+    .moive__summary {
+      margin: 40px 10px 10px 10px;
+      color: #aaaaaa;
       font-size: 30px;
-      color: gray;
     }
   }
 `;
@@ -46,7 +68,7 @@ class Detail extends React.Component {
     if (location.state) {
       console.log(location.state);
       return (
-        <Div
+        <BG
           className="movie_detail"
           style={{
             backgroundImage: `url(${location.state.background})`,
@@ -54,14 +76,26 @@ class Detail extends React.Component {
             backgroundSize: "cover",
           }}
         >
-          <div className="movie">
-            <h1>{location.state.title}</h1>
-            <h2>
-              {location.state.year} {location.state.genres.map((i) => i)}
-            </h2>
-            <h3>{location.state.summary.slice(0, 400)}</h3>
+          <img
+            className="poster"
+            src={location.state.poster}
+            alt={location.state.title}
+            title={location.state.title}
+          />
+          <div className="moive__detail">
+            <div className="movie__title">{location.state.title}</div>
+            <div className="movie__year">{location.state.year}</div>
+            <ul className="movie__geners">
+              {location.state.genres.map((i) => (
+                <li>{i}</li>
+              ))}
+            </ul>
+            <div className="moive__summary">
+              {location.state.summary.slice(0, 420)}
+            </div>
+            <div className="movie__tailer"></div>
           </div>
-        </Div>
+        </BG>
       );
     } else {
       return null;
