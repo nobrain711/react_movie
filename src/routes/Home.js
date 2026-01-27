@@ -15,7 +15,7 @@ class Home extends React.Component {
         data: { movies },
       },
     } = await axios.get(
-      "https://yts.mx/api/v2/list_movies.json?sort_by=rating"
+      "https://yts.mx/api/v2/list_movies.json&order_by=rating"
     ); //eslint-disable-line no-unused-vars
     this.setState({ movies, isLoading: false });
   };
@@ -41,6 +41,8 @@ class Home extends React.Component {
                 title={movie.title}
                 summary={movie.summary}
                 poster={movie.medium_cover_image}
+                trailer={movie.yt_trailer_code}
+                background={movie.background_image_original}
                 genres={movie.genres}
               />
             ))}
