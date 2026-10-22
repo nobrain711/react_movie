@@ -137,7 +137,7 @@ Movie 클릭
 | `src/index.js` | T3 |
 | `src/App.js` | T6 |
 | `src/App.test.js`, `src/routes/Detail.test.js` | T5 |
-| `CLAUDE.md`, `README.md` | T7 |
+| `agent.md`, `README.md` | T7 |
 
 `src/index.js`는 T3가 맡는다. Provider 연결은 Home이 store에 의존하는 시점과 맞춰야 하기 때문이다.
 
@@ -248,9 +248,9 @@ Orca `worker-start --spec`에 그대로 넣을 수 있도록 Target, Change, Con
 
 ### T7 — 문서
 
-- **Target:** `CLAUDE.md`, `README.md`
+- **Target:** `agent.md`, `README.md`
 - **Change:**
-  - `CLAUDE.md`: 구조(`api/`, `store/`), 상태 관리 방식, 테스트 명령, 알려진 문제 목록 갱신. 해결된 항목은 제거.
+  - `agent.md`: 구조(`api/`, `store/`), 상태 관리 방식, 테스트 명령, 알려진 문제 목록 갱신. 해결된 항목은 제거.
   - `README.md`: 파일 트리와 "React5" 표기 정정 (P2-4).
 - **Constraints:** 사실만 쓴다. 실행하지 않은 명령을 검증된 것처럼 쓰지 않는다.
 - **Ownership:** 위 두 파일만.
