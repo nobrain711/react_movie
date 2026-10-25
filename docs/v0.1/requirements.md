@@ -78,4 +78,7 @@ P0보다 먼저 처리한다. 버전 값은 2026-10-25 기준이며, 작업 시�
 
 - 앱은 `HashRouter`를 사용한다. GitHub Pages 배포가 해시 라우팅에 의존하므로 `BrowserRouter`로 바꾸지 않는다.
 - 호스팅 결정(2026-10-25): v0.1은 GitHub Pages를 유지한다. Vercel 전환(`vercel.json` rewrite, `homepage` 정리, `BrowserRouter` 검토)은 v0.2 또는 v0.3에서 진행한다.
-- `npm start`와 `npm run build`는 현재 `--openssl-legacy-provider`를 사용한다. V-4에서 react-scripts 5.x로 올린 뒤 제거 가능한지 확인하고, 결과를 여기에 기록한다. 제거가 안 되면 옵션을 유지한다.
+- V-4 결과(2026-10-25): react-scripts 5.0.1과 Node 26.12.1에서 `--openssl-legacy-provider` 없이 `npm run build`가 성공했다. `start`, `build` 스크립트에서 옵션을 제거했다.
+- V-5 결과(2026-10-25): `@testing-library/user-event`는 `src/`에서 사용하지 않아 제거했다. `web-vitals`는 `src/reportWebVitals.js`에서 사용하므로 유지한다. `gh-pages`는 `deploy` 스크립트에서 사용하므로 호스팅 전환 전까지 유지한다.
+- V-3 결과(2026-10-25): `react-router-dom`을 `^6.30.6`으로 올렸다. v5의 `mini-create-react-context`가 React 19 peer를 선언하지 않아 `npm ls`가 `ELSPROBLEMS`를 보고하던 문제가 해결되었다. 코드 변경: `App.js`의 `Route component` → `Routes` + `element`, `Detail.js`의 class → 함수 컴포넌트(`useLocation`, `useNavigate`). `npm ls`에 오류 없음, `npm run build` 성공.
+- `@babel/core`는 `overrides`로 `^7.28.0`에 고정했다. react-scripts 5.0.1이 고정한 7.20.12가 최신 babel 플러그인과 맞지 않아 테스트 실행이 실패했기 때문이다.

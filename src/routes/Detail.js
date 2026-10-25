@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const BG = styled.div`
   width: 100%;
@@ -13,7 +14,7 @@ const BG = styled.div`
     width: 30%;
     height: 90%;
   }
-  .moive__detail {
+  .movie__detail {
     position: absolute;
     margin-left: 40%;
     margin-top: 2.5%;
@@ -30,76 +31,87 @@ const BG = styled.div`
       margin-top: 10px;
     }
     .movie__year,
-    .movie__geners {
+    .movie__genres {
       color: #bebebe;
       text-align: right;
       margin-right: 7.5%;
       font-size: 25px;
     }
-    .movie__geners {
+    .movie__genres {
       margin-top: 0px;
       list-style: none;
     }
-    .movie__geners li {
+    .movie__genres li {
       float: right;
       font-size: 25px;
       color: #bebebe;
       margin-left: 15px;
       margin-top: 0px;
     }
-    .moive__summary {
+    .movie__summary {
       margin: 40px 10px 10px 10px;
       color: #aaaaaa;
       font-size: 30px;
     }
+    .movie__trailer {
+      color: #bebebe;
+    }
   }
 `;
 
-class Detail extends React.Component {
-  componentDidMount() {
-    const { location, history } = this.props;
+function Detail() {
+  const location = useLocation();
+  const navigate = useNavigate();
 
-    if (location.state === undefined) {
-      history.push("/");
+  useEffect(() => {
+    if (!location.state) {
+      navigate("/", { replace: true });
     }
-  }
-  render() {
-    const { location } = this.props;
-    if (location.state) {
-      console.log(location.state);
-      return (
-        <BG
-          className="movie_detail"
-          style={{
-            backgroundImage: `url(${location.state.background})`,
-            backgroundRepeat: "no-repeat",
-            backgroundSize: "cover",
-          }}
-        >
-          <img
-            className="poster"
-            src={location.state.poster}
-            alt={location.state.title}
-            title={location.state.title}
-          />
-          <div className="moive__detail">
-            <div className="movie__title">{location.state.title}</div>
-            <div className="movie__year">{location.state.year}</div>
-            <ul className="movie__geners">
-              {location.state.genres.map((i) => (
-                <li>{i}</li>
-              ))}
-            </ul>
-            <div className="moive__summary">
-              {location.state.summary.slice(0, 420)}
-            </div>
-            <div className="movie__tailer"></div>
+  }, [location.state, navigate]);
+
+  if (location.state) {
+    return (
+      <BG
+        className="movie_detail"
+        style={{
+          backgroundImage: `url(${location.state.background})`,
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+        }}
+      >
+        <img
+          className="poster"
+          src={location.state.poster}
+          alt={location.state.title}
+          title={location.state.title}
+        />
+        <div className="movie__detail">
+          <div className="movie__title">{location.state.title}</div>
+          <div className="movie__year">{location.state.year}</div>
+          <ul className="movie__genres">
+            {location.state.genres.map((i, index) => (
+              <li key={index}>{i}</li>
+            ))}
+          </ul>
+          <div className="movie__summary">
+            {location.state.summary.slice(0, 420)}
           </div>
-        </BG>
-      );
-    } else {
-      return null;
-    }
+          {location.state.trailer && (
+            <a
+              className="movie__trailer"
+              href={`https://www.youtube.com/watch?v=${location.state.trailer}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              예고편 보기
+            </a>
+          )}
+        </div>
+      </BG>
+    );
+  } else {
+    return null;
   }
 }
+
 export default Detail;

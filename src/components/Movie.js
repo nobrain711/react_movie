@@ -12,7 +12,6 @@ function Movie({ title, year, summary, poster, genres, background, trailer }) {
           state: { year, title, summary, poster, genres, background, trailer },
         }}
       >
-        {" "}
         <img src={poster} alt={title} title={title} />
         <div className="movie__data">
           <h3 className="movie__title">{title}</h3>
@@ -33,10 +32,9 @@ function Movie({ title, year, summary, poster, genres, background, trailer }) {
   );
 }
 /**
- * id: API ID
  * title: Movie Title
  * year: Movie개봉 연도
- * summary: Movie 정류
+ * summary: Movie 줄거리
  * poster: API Poster image 주소
  */
 Movie.propTypes = {
