@@ -34,6 +34,7 @@
 - `react-scripts`를 제거하고 Vite를 권장한다. 대안은 CRA 유지 + TS 설정이지만, Dependabot alert 해소 목표와 충돌하므로 권장하지 않는다.
 - GitHub Pages 경로 `/react_movie/`에 맞춰 Vite의 `base`를 설정한다.
 - `HashRouter`는 유지한다.
+- 호스팅 결정(2026-10-25): v0.1은 GitHub Pages를 유지한다. Vercel 전환(`vercel.json` rewrite, `homepage` 정리, `BrowserRouter` 검토)은 v0.2 또는 v0.3에서 진행한다. v0.2는 GitHub Pages 유지가 기본이며, 전환 여부는 v0.2 범위 확정 시 다시 결정한다.
 - `gh-pages` 배포 스크립트 경로(`build` → `dist`)를 바꾼다. 출력 디렉터리를 바꾸면 `deploy` 스크립트도 같이 수정한다.
 
 ### 3.2 테스트 도구

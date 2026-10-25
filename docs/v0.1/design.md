@@ -1,14 +1,16 @@
 # react_movie v0.1 설계 문서
 
 - 작성일: 2026-10-22
+- 갱신: 2026-10-25 (V 그룹 선행 작업, Node 26.12.1, React 19 반영)
 - 기준: `main` @ 10b5117
-- 관련 문서: `docs/v0.1/requirements.md`
+- 관련 문서: `docs/v0.1/requirements.md` (V 그룹 포함)
 - 상태: 설계 단계. 소스 코드는 변경하지 않았다.
 
 ## 1. 목표와 범위
 
-v0.1의 목표는 세 가지다.
+v0.1의 목표는 네 가지다.
 
+0. 선행(V 그룹): Node.js 26.12.1 이상, React 19.x, react-scripts 5.x로 올린다. 패키지 매니저는 npm을 유지한다.
 1. `src/`의 클래스 컴포넌트(`Home`, `Detail`)를 함수 컴포넌트로 바꾼다.
 2. 영화 목록 상태를 Redux Toolkit store로 관리한다.
 3. `requirements.md`의 P0/P1 항목을 함께 처리한다. P2는 가능한 범위에서 처리한다.
@@ -16,18 +18,17 @@ v0.1의 목표는 세 가지다.
 범위 밖은 다음과 같다.
 
 - TypeScript 전환. v0.2에서 진행한다. v0.1에서는 `.js` 파일을 유지한다.
-- `react-scripts`, `react-router-dom` 메이저 업그레이드.
+- `react-router-dom` 메이저 업그레이드(v5 유지). `react-scripts`와 React 업그레이드는 V 그룹(T0)에서 처리한다.
 - 디자인 변경.
 
 ## 2. 현재 상태
 
-- `package.json`과 `package-lock.json`이 변경되어 있다(커밋 전). 추가된 의존성:
-  - `@reduxjs/toolkit@^2.13.0`
-  - `react-redux@^9.3.0`
-  - `prop-types@^15.8.1` (P1-1)
-- `node_modules`는 `npm ci`로 설치했다. Node v24.14.1, npm 11.16.0.
+- 패키지 매니저: npm 11.16.0으로 확정. 기존 `package-lock.json`이 git에 추적 중이고 CRA(react-scripts) 호환 경로가 검증되어 있다. yarn 1.x는 레거시, bun은 CRA/gh-pages 호환이 미검증이라 도입하지 않는다.
+- Node: v26.12.1 설치 완료(winget, 시스템 설치). 패치 버전이 CVE-2026-111497(Node2Shell)을 막는다. nvm은 설치되어 있지 않다.
+- 추가된 의존성(`@reduxjs/toolkit@^2.13.0`, `react-redux@^9.3.0`, `prop-types@^15.8.1`, P1-1)은 커밋 47498b5에 포함되어 있다.
+- `node_modules`는 `npm ci`로 설치했다(2026-10-25, lockfile 변경 없음). deprecated 경고가 다수 나왔다(react-scripts 2.x 의존 체인). core-js@2.6.12 postinstall 승인 경고도 있다.
 - `src/` 파일은 아직 변경되지 않았다. 작성 시도는 사용자 요청으로 중단되었다.
-- 설치된 주요 버전: `react` 18.2.0, `react-router-dom` 5.1.2, `react-scripts` 2.x.
+- 설치된 주요 버전: `react` 18.2.0, `react-router-dom` 5.1.2, `react-scripts` 2.x. V 그룹(T0)에서 React 19.x, react-scripts 5.x, `@testing-library/react` 16.x로 올린다. T0 이전의 빌드·테스트 결과는 기준선이 아니다.
 
 ## 3. 아키텍처
 
@@ -87,6 +88,43 @@ Movie 클릭
   → Detail: state 있으면 렌더, 없으면 history.replace("/")
 ```
 
+### 3.4 화면(레이어) 구성
+
+레이어는 위에서 아래로 의존한다. 위 레이어는 아래 레이어만 호출한다.
+
+```
+[진입] index.js (Provider, store)
+  └─ App.js (HashRouter, 라우트 정의)
+       ├─ Navigation (항상 노출)
+       └─ 화면(routes/)
+            ├─ Home      : 목록 화면
+            ├─ Detail    : 상세 화면
+            ├─ About     : 정적 화면
+            └─ NotFound  : 404 화면 (신규)
+                 └─ 컴포넌트(components/): Movie 카드
+                      └─ 데이터: store (목록) / Link state (상세)
+                           └─ api/movies.js → YTS API
+```
+
+#### 화면별 기능
+
+| 화면 | 경로 | 역할 | 표시 상태 | 진입 | 이탈 |
+| --- | --- | --- | --- | --- | --- |
+| 공통 내비게이션 | 모든 경로 | 화면 간 이동 | 항상 표시. "Home", "about" 링크 2개 | - | 링크 클릭 |
+| Home | `#/` | 평점순 영화 목록 | 로딩 중: 로더. 실패: "영화 목록을 불러오지 못했습니다." 메시지. 성공: 영화 카드 목록 | 내비게이션, 앱 시작 | 카드 클릭 → Detail |
+| Movie 카드 | Home 내부 | 영화 한 편 요약 표시 | 포스터, 제목, 연도 등 표시. 클릭 가능한 `Link` | Home 목록 | 클릭 시 Detail로 `state` 전달 |
+| Detail | `#/movie-detail` | 선택한 영화의 상세 정보 | `state`가 있으면 포스터, 제목, 연도, 장르 목록, 줄거리, 트레일러 링크(`trailer`가 있을 때만) 표시. `state`가 없으면 `#/`로 `replace` | Movie 카드 클릭 | 내비게이션, 뒤로 가기 |
+| About | `#/about` | 정적 정보 화면 | "hi", "son" 텍스트 표시. 기능 없음. 변경하지 않는다 | 내비게이션 | 내비게이션 |
+| NotFound | `*` (알 수 없는 경로) | 잘못된 경로 안내 | "페이지를 찾을 수 없습니다." 메시지와 `/` 링크 (P2-2, T6) | 잘못된 해시 경로 | `/` 링크 |
+
+#### 화면 동작 규칙
+
+- 목록 데이터는 Home이 마운트될 때 한 번 요청한다. 같은 세션에서 Home으로 돌아오면 store의 기존 `items`를 사용한다(재요청 여부는 T3에서 정한다).
+- Detail은 목록에서 넘어온 `state`만 쓴다. 상세 API를 따로 호출하지 않는다. 직접 URL 접근 시 `state`가 없어 `#/`로 간다.
+- 트레일러는 외부 YouTube 링크로 열린다. 앱 안에서 재생하지 않는다.
+- 화면 레이아웃(수치, 클래스명)은 v0.1에서 바꾸지 않는다. 이름 정정(P1-4)만 한다.
+- 404 화면은 v0.1 범위에 포함되지만 About과 같은 정적 화면이므로 API나 store에 의존하지 않는다.
+
 ## 4. 컴포넌트 변환 설계
 
 ### 4.1 Home (`src/routes/Home.js`)
@@ -115,6 +153,7 @@ Movie 클릭
 - propTypes 정정 (P1-2). 정정 전 요구사항 문서의 설명을 바로잡는다. `background`와 `trailer`는 카드에서 직접 그리지 않지만, `Link`의 `state`로 상세 페이지에 전달되므로 필수 유지가 맞다. 실제 문제는 `id`가 propTypes에 없다는 점이고, `id`는 카드에서 사용하지 않으므로 propTypes에 추가하지 않는다. Home에서 넘기는 `id`는 `key` 용도로만 쓰인다.
 - `{" "}` 제거 (P2-3).
 - JSDoc 정정: `summary`의 "정류"를 "줄거리"로 고친다. `id` 항목은 삭제한다.
+- React 19는 함수 컴포넌트의 propTypes 런타임 검사를 하지 않는다. `propTypes`는 문서화 용도로 유지하고, 검증 방식은 T2 acceptance를 따른다.
 
 ### 4.4 App / index
 
@@ -127,7 +166,7 @@ Movie 클릭
 
 | 파일 | 소유 태스크 |
 | --- | --- |
-| `package.json`, `package-lock.json` | T0 (완료, 추가 수정 없음) |
+| `package.json`, `package-lock.json` | T0 (V 그룹) |
 | `src/api/movies.js` | T1 |
 | `src/store/index.js`, `src/store/moviesSlice.js` | T1 |
 | `src/store/moviesSlice.test.js` | T5 |
@@ -144,7 +183,7 @@ Movie 클릭
 ## 6. 태스크 DAG
 
 ```
-T0 (완료: 의존성 설치)
+T0 (V 그룹: Node·React·react-scripts 업그레이드, 기준선 확인)
  ├─ T1 api + store ──┬─ T3 Home + index.js ──┐
  │                   │                       │
  │                   └─ T5 store/app 테스트 ─┤
@@ -158,6 +197,7 @@ Wave 구성:
 
 | Wave | 태스크 | 병렬 여부 |
 | --- | --- | --- |
+| 0 | T0 | 단독. 완료 전에는 다른 Wave를 시작하지 않는다. |
 | 1 | T1, T2, T4 | 병렬. 파일이 겹치지 않는다. |
 | 2 | T3 | T1 완료 후 |
 | 3 | T5, T6 | T3 완료 후. T5는 T3·T4와 함께 가능. |
@@ -168,6 +208,22 @@ T4(Detail)는 store에 의존하지 않으므로 Wave 1에서 시작한다.
 ## 7. 태스크 명세
 
 Orca `worker-start --spec`에 그대로 넣을 수 있도록 Target, Change, Constraints, Ownership, Observable acceptance 다섯 항목으로 쓴다.
+
+### T0 — V 그룹 (Node·React·react-scripts 업그레이드)
+
+- **Target:** `package.json`, `package-lock.json`
+- **Change:**
+  - `engines.node`를 `>=26.12.1`로 명시한다(CVE-2026-111497 패치 버전).
+  - `react`, `react-dom`을 19.x로 올린다.
+  - `react-scripts`를 5.x로 올린다. `--openssl-legacy-provider` 제거 가능 여부를 확인하고 결과를 `requirements.md` 참고 항목에 기록한다.
+  - `@testing-library/react`를 16.x로 올리고 `@testing-library/dom` peer를 추가한다.
+  - `react-redux`, `react-router-dom`(v5), `styled-components`(v5) 호환을 확인한다.
+  - 레거시 모듈 점검(V-5): 업그레이드하는 각 패키지의 사용처를 `src/`와 설정 파일에서 grep한다. 사용처가 없고 도구 의존성도 아니면 `npm uninstall`로 바로 제거한다. 사용처가 있으면 유지 사유 또는 대체 방법을 `requirements.md` 참고 항목에 기록한다. 대상 예: `web-vitals`, `@testing-library/user-event` 13.x, `gh-pages`(호스팅 전환 전까지 유지).
+- **Constraints:**
+  - 패키지 매니저는 npm. `npm install`로 lockfile을 갱신하고 yarn/bun lockfile은 만들지 않는다.
+  - `src/`는 바꾸지 않는다. 빌드가 깨지면 원인만 기록하고 사용자와 상의한다.
+- **Ownership:** 위 두 파일과 `package.json`의 `scripts`(필요 시)만.
+- **Observable acceptance:** `node -v`가 26.12.1 이상, `npm ls react react-dom`이 19.x, `npm install`에 ERESOLVE 없음, `npm run build`와 `npm test` 성공(기준선). `requirements.md`의 V 항목 완료 조건 충족.
 
 ### T1 — api 모듈과 store
 
@@ -192,7 +248,7 @@ Orca `worker-start --spec`에 그대로 넣을 수 있도록 Target, Change, Con
   - JSDoc "정류" → "줄거리", `id` 항목 삭제.
 - **Constraints:** 카드 레이아웃과 클래스명(`movie__genres`, `movie__genre`)은 바꾸지 않는다.
 - **Ownership:** 위 두 파일만.
-- **Observable acceptance:** 콘솔에 propTypes 경고가 없다(T5 테스트 렌더 중 `console.error` 검사).
+- **Observable acceptance:** React 19는 함수 컴포넌트의 propTypes 런타임 경고를 내지 않으므로 콘솔 검사로는 검증할 수 없다. 대신 `Movie.propTypes`의 키가 `Home`이 `Link state`로 넘기는 값과 일치하는지 리뷰로 확인한다.
 
 ### T3 — Home 변환과 Provider 연결
 
@@ -200,7 +256,7 @@ Orca `worker-start --spec`에 그대로 넣을 수 있도록 Target, Change, Con
 - **Change:**
   - class → function. `useSelector`로 `movies` 상태를 읽고, `useEffect`에서 `dispatch(loadMovies())`.
   - 렌더 분기: error → `<div className="error">` 메시지 "영화 목록을 불러오지 못했습니다.", isLoading → 기존 로더, 그 외 → 기존 목록.
-  - `index.js`에서 `Provider`로 `App` 감싸기.
+  - `index.js`에서 `Provider`로 `App` 감싸기. `index.js`는 이미 `ReactDOM.createRoot`를 쓰므로 React 19 대응 변경은 없다.
   - `eslint-disable-line` 제거.
 - **Constraints:**
   - `Home.css` 클래스명은 바꾸지 않는다.
@@ -233,7 +289,7 @@ Orca `worker-start --spec`에 그대로 넣을 수 있도록 Target, Change, Con
   - `moviesSlice.test.js`: reducer에 액션 객체를 직접 넣어 상태 전이 검증.
 - **Constraints:**
   - 테스트에서 실제 네트워크를 호출하지 않는다.
-  - `axios`를 import하는 모듈을 테스트에서 실제로 로드하지 않도록 `api/movies`를 모킹한다. Jest 23(react-scripts 2.x)은 axios 1.x의 ESM 진입점을 파싱하지 못할 수 있다.
+  - `axios`를 import하는 모듈을 테스트에서 실제로 로드하지 않도록 `api/movies`를 모킹한다. react-scripts 5.x(Jest 27)에서도 axios 1.x의 ESM 진입점 로드가 실패할 수 있다.
   - 실행: `CI=true npm test -- --watchAll=false`.
 - **Ownership:** 위 세 파일만.
 - **Observable acceptance:** `npm test` 전체 통과.
@@ -292,6 +348,7 @@ ORCA orchestration check --wait --types "worker_done,escalation,question" --time
 
 | 단계 | 명령 | 통과 기준 |
 | --- | --- | --- |
+| 런타임·도구 | `node -v`, `npm -v`, `npm ls react react-dom react-scripts @testing-library/react` | Node 26.12.1 이상, npm 11.x, React 19.x, react-scripts 5.x, RTL 16.x |
 | 의존성 | `npm ls @reduxjs/toolkit react-redux prop-types` | 세 패키지 모두 직접 의존성으로 표시 |
 | 빌드 | `npm run build` | 성공, 신규 경고 없음 |
 | 테스트 | `CI=true npm test -- --watchAll=false` | 전체 통과 |
@@ -310,11 +367,14 @@ ORCA orchestration check --wait --types "worker_done,escalation,question" --time
 
 | 위험 | 영향 | 대응 |
 | --- | --- | --- |
-| react-scripts 2.x(webpack 4)가 RTK 2.x, react-redux 9.x의 현대 번들 형식을 처리하지 못할 수 있음 | 빌드 실패 | T1 완료 직후 `npm run build`로 확인. 실패 시 원인 패키지 버전 조정은 사용자와 상의. |
-| Jest 23에서 axios 1.x ESM 로드 실패 | 테스트 실패 | `api/movies` 모킹으로 axios를 로드하지 않음 (T5 Constraints) |
+| react-scripts 5.x 빌드에서 React 19·RTK 2.x 호환 문제 | 빌드 실패 | T0에서 `npm run build` 통과를 확인한 뒤 Wave 1 시작. 실패 시 원인 패키지 버전 조정은 사용자와 상의. |
+| Jest 27(react-scripts 5.x)에서도 axios 1.x ESM 로드 실패 가능 | 테스트 실패 | `api/movies` 모킹으로 axios를 로드하지 않음 (T5 Constraints) |
 | `useHistory` 등 hook API 가용성 | 런타임 오류 | react-router-dom 5.1.2 확인 완료 (hooks 지원). 변경 없음. |
 | 같은 작업 트리에서 병렬 worker 충돌 | 파일 덮어쓰기 | 소유권 표(5절)와 Wave 구성으로 방지 |
-| 현재 커밋 안 된 `package.json` 변경 | 다른 작업자와 충돌 | Wave 1 시작 전 사용자가 의존성 변경을 확인하고 커밋 여부를 결정 |
+| React 19는 함수 컴포넌트의 런타임 propTypes 검사를 하지 않음 | T2 콘솔 경고 검증 무효 | T2 acceptance를 리뷰 방식으로 대체 |
+| react-router-dom 5.1.2를 React 19와 함께 쓰는 호환성 | 라우팅 오류 또는 peer 경고 | T0에서 `npm install` peer 경고와 HashRouter 동작 확인. 실패 시 v6 이상 업그레이드를 사용자와 상의. |
+| Node.js 취약점 CVE-2026-111497(Node2Shell) | 원격 코드 실행 | `engines.node`를 26.12.1 이상으로 고정. 24.x 사용 시 24.22.1 이상. |
+| V 그룹 변경(`package.json`, `package-lock.json`)이 커밋 전 상태 | 다른 작업자와 충돌 | T0 완료 후 사용자가 커밋 여부를 결정하고, 커밋 후 Wave 1 시작 |
 
 ## 11. v0.2 TS 전환을 위한 고려사항 (v0.1에서 할 일 아님)
 
@@ -328,3 +388,4 @@ ORCA orchestration check --wait --types "worker_done,escalation,question" --time
 2. 커밋 시점: v0.1 전체 완료 후 한 번에 커밋할지, Wave 단위로 나눌지.
 3. P2 항목 처리 범위: P2-4(README)를 이번 v0.1에 포함할지.
 4. YTS 정렬 파라미터명(`sort_by=rating`)은 YTS 공식 문서 확인 후 확정.
+5. React 19에서 react-router-dom 5.1.2 호환이 실패하면 v6 이상 업그레이드를 이번 v0.1에 포함할지.

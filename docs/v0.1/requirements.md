@@ -1,6 +1,7 @@
 # react_movie v0.1 요구사항
 
 - 작성일: 2026-10-22
+- 갱신: 2026-10-25 (선행 요구사항 V 그룹 추가)
 - 기준: `main` @ 10b5117
 - 범위: `src/`, 테스트 설정, 의존성 선언의 현재 문제를 우선순위별로 수정한다.
 
@@ -16,7 +17,20 @@
 
 - 시각 디자인 전면 개편.
 - 클래스 컴포넌트(`Home`, `Detail`)의 함수 컴포넌트 전환.
-- `react-scripts`(2.x), `react-router-dom`(v5) 등 주요 의존성의 메이저 업그레이드. 별도로 추적한다.
+- `react-router-dom`(v5) 등 주요 의존성의 메이저 업그레이드. 별도로 추적한다.
+- 단, `react-scripts`(2.x)는 React 19 적용에 필요하므로 V-4에서 예외로 올린다.
+
+## 선행 요구사항: 런타임 및 React 버전 (V 그룹)
+
+P0보다 먼저 처리한다. 버전 값은 2026-10-25 기준이며, 작업 시작 시점에 다시 확인해 확정 버전을 이 문서에 기록한다.
+
+| ID | 대상 | 요구사항 | 완료 조건 |
+| --- | --- | --- | --- |
+| V-1 | Node.js | 현재 LTS 버전으로 올린다. 2026-10-25 기준 Node 24는 Active LTS 종료 단계이고, Node 26이 2026-10-28에 Active LTS로 전환될 예정이다. 작업 시점에 https://nodejs.org/about/releases 에서 최신 LTS를 확인하고 확정 버전을 기록한다. `package.json`의 `engines.node`에 최소 버전을 명시하고, 로컬 Node 버전도 맞춘다. | `node -v`가 확정한 LTS 메이저와 일치한다. `engines.node`가 명시되어 있다. `npm install`, `npm test`, `npm run build`가 성공한다. |
+| V-2 | React | 최신 안정 버전인 React 19.x(2026-10-25 기준 19.3.1)로 올린다. `react`와 `react-dom`을 같은 버전으로 맞춘다. React에는 공식 LTS 개념이 없으므로 "LTS"는 최신 안정(stable) 메이저로 해석한다. | `npm ls react react-dom`이 19.x로 표시된다. 콘솔에 React 경고가 없다. |
+| V-3 | React 연동 패키지 | React 19와 peer dependency가 맞도록 올린다. 대상: `@testing-library/react`(13.x는 React 18 전용이므로 16.x 이상), `react-redux`, `react-router-dom`(v5), `styled-components`(v5), `@testing-library/jest-dom`, `@testing-library/user-event`. 호환이 안 되는 패키지는 이 문서에 사유와 대안을 기록한다. | `npm install`에서 peer dependency 오류(ERESOLVE)가 없다. 테스트에서 React 관련 경고가 없다. |
+| V-4 | react-scripts | React 19 빌드를 위해 react-scripts를 5.x 이상으로 올린다(2026-10-25 기준 npm latest 5.0.1). react-scripts 5.x는 webpack 5 기반이라 `--openssl-legacy-provider`가 불필요할 수 있다. 제거 가능 여부를 확인하고 결과를 기록한다. | `npm start`, `npm run build`, `npm test`가 성공한다. `--openssl-legacy-provider` 유지 또는 제거 결정이 참고 항목에 기록되어 있다. |
+| V-5 | 레거시 모듈 | 버전을 올리는 과정에서 각 의존성의 사용처를 `src/`와 설정 파일에서 확인한다. 사용처가 없고 빌드·테스트 도구도 필요로 하지 않으면 바로 제거한다(`npm uninstall`). 사용처가 있으면 유지 사유 또는 대체 방법을 이 문서에 기록한다. 대상 예: `web-vitals`, `@testing-library/user-event` 13.x, `gh-pages`(호스팅 전환 전까지 유지). | 제거한 패키지와 유지한 패키지의 사유가 기록되어 있다. `npm ls`에 사용되지 않는 직접 의존성이 없다. 빌드와 테스트가 통과한다. |
 
 ## P0 요구사항
 
@@ -50,6 +64,7 @@
 
 우선순위 그룹을 끝낼 때마다 실행한다.
 
+0. V 그룹 완료: `node -v`, `npm ls react react-dom` 버전 확인 (V-1, V-2). `npm install`에 peer 오류 없음 (V-3).
 1. `npm test` 통과 (P0-4).
 2. `npm run build` 성공, 새 경고 없음.
 3. `npm start` 후 수동 확인:
@@ -62,4 +77,5 @@
 ## 참고
 
 - 앱은 `HashRouter`를 사용한다. GitHub Pages 배포가 해시 라우팅에 의존하므로 `BrowserRouter`로 바꾸지 않는다.
-- `npm start`와 `npm run build`는 `--openssl-legacy-provider`를 사용한다. 이 옵션은 유지한다.
+- 호스팅 결정(2026-10-25): v0.1은 GitHub Pages를 유지한다. Vercel 전환(`vercel.json` rewrite, `homepage` 정리, `BrowserRouter` 검토)은 v0.2 또는 v0.3에서 진행한다.
+- `npm start`와 `npm run build`는 현재 `--openssl-legacy-provider`를 사용한다. V-4에서 react-scripts 5.x로 올린 뒤 제거 가능한지 확인하고, 결과를 여기에 기록한다. 제거가 안 되면 옵션을 유지한다.
