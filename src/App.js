@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-import { HashRouter, Route } from "react-router-dom";
+import { HashRouter, Link, Route, Routes } from "react-router-dom";
 import About from "./routes/About";
 import Home from "./routes/Home";
 import Navigation from "./components/Navigation";
@@ -10,9 +10,20 @@ function App() {
   return (
     <HashRouter>
       <Navigation />
-      <Route path="/" exact={true} component={Home} />
-      <Route path="/about" component={About} />
-      <Route path="/movie-detail" component={Detail} />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/movie-detail" element={<Detail />} />
+        <Route
+          path="*"
+          element={
+            <div>
+              <p>페이지를 찾을 수 없습니다.</p>
+              <Link to="/">홈으로</Link>
+            </div>
+          }
+        />
+      </Routes>
     </HashRouter>
   );
 }
