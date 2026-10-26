@@ -53,6 +53,18 @@ test("shows error message and no cards when API request fails", async () => {
   expect(screen.queryByText("Movie One")).not.toBeInTheDocument();
 });
 
+test("shows 404 message for unknown route", async () => {
+  window.location.hash = "#/unknown";
+  renderApp();
+  expect(
+    await screen.findByText("페이지를 찾을 수 없습니다.")
+  ).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute(
+    "href",
+    "#/"
+  );
+});
+
 test("redirects /movie-detail without state to /", async () => {
   window.location.hash = "#/movie-detail";
   renderApp();

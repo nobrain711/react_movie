@@ -16,10 +16,11 @@
 
 - github (코드)
 - Node (프레임워크)
+- Node >=26.12.1 (`engines.node`)
 
 ### 프레임 워크
 
-- React5
+- React ^19.3.1
 
 ### 배포
 
@@ -32,6 +33,8 @@
 ## 파일 구성
 
 > 📦src  
+>  ┣ 📂api  
+>  ┃ ┗ 📜movies.js  
 >  ┣ 📂components  
 >  ┃ ┣ 📜Movie.css  
 >  ┃ ┣ 📜Movie.js  
@@ -41,8 +44,13 @@
 >  ┃ ┣ 📜About.css  
 >  ┃ ┣ 📜About.js  
 >  ┃ ┣ 📜Detail.js  
+>  ┃ ┣ 📜Detail.test.js  
 >  ┃ ┣ 📜Home.css  
 >  ┃ ┗ 📜Home.js  
+>  ┣ 📂store  
+>  ┃ ┣ 📜index.js  
+>  ┃ ┣ 📜moviesSlice.js  
+>  ┃ ┗ 📜moviesSlice.test.js  
 >  ┣ 📜App.css  
 >  ┣ 📜App.js  
 >  ┣ 📜App.test.js  
